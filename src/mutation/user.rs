@@ -45,7 +45,12 @@ impl UserMutation {
             .to_string();
 
         sqlx::query!(
-            "INSERT INTO acct (acct_email, acct_country, acct_password) VALUES ($1, $2, $3);",
+            "WITH ROWS AS (INSERT INTO acct (acct_email, acct_country, acct_password)
+                VALUES ($1, $2, $3)
+                RETURNING acct_key)
+            INSERT INTO acct_role (acct_key, role_key)
+                SELECT acct_key, 1
+                FROM rows;",
             email,
             country,
             hash
