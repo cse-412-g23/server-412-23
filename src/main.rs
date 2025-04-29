@@ -20,6 +20,7 @@ mod db;
 mod guards;
 mod mutation;
 mod query;
+mod util;
 
 pub type ThisSchema = Schema<Query, Mutation, EmptySubscription>;
 
