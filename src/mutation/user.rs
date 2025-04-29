@@ -11,6 +11,7 @@ use sha2::Sha256;
 use sqlx::PgPool;
 
 use crate::auth::User;
+use crate::guards::role::RoleGuard;
 
 #[derive(Default)]
 pub struct UserMutation;
@@ -96,5 +97,66 @@ impl UserMutation {
         let token = auth_jwt_obj.sign_with_key(&key)?;
 
         Ok(token)
+    }
+
+    #[graphql(guard = "RoleGuard::AcctEdit")]
+    pub async fn add_role(&self, ctx: &Context<'_>, acct_key: i32, role_key: i32) -> Result<bool> {
+        let pool = ctx.data::<PgPool>()?;
+
+        let exists = sqlx::query!(
+            "SELECT acct_key FROM acct_role WHERE acct_key = $1 AND role_key = $2",
+            acct_key,
+            role_key
+        )
+        .fetch_one(pool)
+        .await
+        .ok();
+
+        if exists.is_some() {
+            return Err("User already has this role.".into());
+        }
+
+        sqlx::query!(
+            "INSERT INTO acct_role (acct_key, role_key) VALUES ($1, $2)",
+            acct_key,
+            role_key
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(true)
+    }
+
+    #[graphql(guard = "RoleGuard::AcctEdit")]
+    pub async fn remove_role(
+        &self,
+        ctx: &Context<'_>,
+        acct_key: i32,
+        role_key: i32,
+    ) -> Result<bool> {
+        let pool = ctx.data::<PgPool>()?;
+
+        let exists = sqlx::query!(
+            "SELECT acct_key FROM acct_role WHERE acct_key = $1 AND role_key = $2",
+            acct_key,
+            role_key
+        )
+        .fetch_one(pool)
+        .await
+        .ok();
+
+        if exists.is_none() {
+            return Err("User does not have this role.".into());
+        }
+
+        sqlx::query!(
+            "DELETE FROM acct_role WHERE acct_key = $1 AND role_key = $2",
+            acct_key,
+            role_key
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(true)
     }
 }
