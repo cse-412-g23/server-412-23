@@ -5,9 +5,13 @@ use crate::auth::User;
 use crate::guards::login::LoginGuard;
 
 #[derive(SimpleObject)]
+/// A user account.
 pub struct Account {
+    /// The user's primary key.
     key: i32,
+    /// The user's email.
     email: String,
+    /// The country the user stated they reside in during registration.
     country: String,
 }
 
