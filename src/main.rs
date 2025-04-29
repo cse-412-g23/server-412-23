@@ -35,6 +35,7 @@ fn get_user_from_headers(headers: &HeaderMap) -> Option<User> {
 
         if header.starts_with("Bearer ") {
             let token = &header[7..header.len()];
+
             let key: Hmac<Sha256> =
                 Hmac::new_from_slice(&var("JWT_SECRET").ok()?.into_bytes()).ok()?;
             token.verify_with_key(&key).ok()?
@@ -58,6 +59,8 @@ async fn index(
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {
+    dotenvy::dotenv().expect("couldn't load env file");
+
     let pool = create_pool().await;
 
     HttpServer::new(move || {

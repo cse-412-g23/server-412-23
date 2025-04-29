@@ -27,7 +27,7 @@ impl UserMutation {
         let pool = ctx.data::<PgPool>()?;
 
         let email_check = sqlx::query!("SELECT FROM acct WHERE acct_email = $1", email)
-            .execute(pool)
+            .fetch_one(pool)
             .await
             .ok();
 

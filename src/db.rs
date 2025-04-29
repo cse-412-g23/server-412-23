@@ -13,7 +13,8 @@ pub async fn create_pool() -> PgPool {
                 .ok()
                 .flatten()
                 .unwrap_or(5432),
-        );
+        )
+        .database(&var("POSTGRES_DB").expect("no database"));
 
     let pool = PgPool::connect_with(options)
         .await
