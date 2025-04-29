@@ -20,15 +20,22 @@ pub struct Account {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Enum, Eq, Hash)]
+/// An individual account permission.
 pub enum Permission {
+    /// Allows the user to order goods.
     Purchasing,
+    /// Allows the user to edit any product.
     ProductEdit,
+    /// Allows the user to edit any seller.
     SellerEdit,
+    /// Allows the user to edit any account. This also allows the user to perform ancillary actions
+    /// such as managing roles.
     AcctEdit,
 }
 
 #[ComplexObject]
 impl Account {
+    /// Returns the names of the roles of the account.
     async fn roles(&self, ctx: &Context<'_>) -> Result<Vec<String>> {
         self_or_acct_any(ctx, self.key).await?;
 
@@ -44,6 +51,7 @@ impl Account {
         Ok(roles.into_iter().map(|r| r.role_name).collect())
     }
 
+    /// Returns the permissions of the account, as a list of `Permission`.
     async fn permissions(&self, ctx: &Context<'_>) -> Result<Vec<Permission>> {
         self_or_acct_any(ctx, self.key).await?;
 

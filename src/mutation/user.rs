@@ -100,6 +100,8 @@ impl UserMutation {
     }
 
     #[graphql(guard = "RoleGuard::AcctEdit")]
+    /// Adds a role to a given account. You must have the `AcctEdit` permission to perform this
+    /// action.
     pub async fn add_role(&self, ctx: &Context<'_>, acct_key: i32, role_key: i32) -> Result<bool> {
         let pool = ctx.data::<PgPool>()?;
 
@@ -127,6 +129,8 @@ impl UserMutation {
         Ok(true)
     }
 
+    /// Removes a role from a given account. You must have the `AcctEdit` permission to perform
+    /// this action.
     #[graphql(guard = "RoleGuard::AcctEdit")]
     pub async fn remove_role(
         &self,

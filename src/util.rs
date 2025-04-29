@@ -1,5 +1,4 @@
 use async_graphql::{Context, Guard, Result};
-use sqlx::PgPool;
 
 use crate::{auth::User, guards::role::RoleGuard};
 
