@@ -17,6 +17,7 @@ pub struct UserMutation;
 
 #[Object]
 impl UserMutation {
+    /// Creates a new user account with the specified information.
     pub async fn create_user(
         &self,
         ctx: &Context<'_>,
@@ -55,6 +56,9 @@ impl UserMutation {
         Ok(true)
     }
 
+    /// Creates a JWT token for a given user, if the email and password combination are valid.
+    /// The token must be presented in the form of a Bearer Authorization header, only for
+    /// authenticated requests.
     pub async fn login_user(
         &self,
         ctx: &Context<'_>,

@@ -21,6 +21,7 @@ pub struct UserQuery;
 #[Object]
 impl UserQuery {
     #[graphql(guard = "LoginGuard")]
+    /// Retrieves the currently logged in user's information.
     async fn me(&self, ctx: &Context<'_>) -> Result<Account> {
         let user = ctx.data::<User>()?;
         let pool = ctx.data::<PgPool>()?;
