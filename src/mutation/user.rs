@@ -10,8 +10,8 @@ use jwt::SignWithKey;
 use sha2::Sha256;
 use sqlx::PgPool;
 
-use crate::auth::User;
 use crate::guards::role::RoleGuard;
+use crate::{auth::User, query::user::Permission};
 
 #[derive(Default)]
 pub struct UserMutation;
@@ -157,6 +157,156 @@ impl UserMutation {
             "DELETE FROM acct_role WHERE acct_key = $1 AND role_key = $2",
             acct_key,
             role_key
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(true)
+    }
+
+    /// Create a new role with no permissions. You must have the `AcctEdit` permission to perform
+    /// this action.
+    #[graphql(guard = "RoleGuard::AcctEdit")]
+    pub async fn create_role(&self, ctx: &Context<'_>, name: String) -> Result<i32> {
+        let pool = ctx.data::<PgPool>()?;
+
+        let exists = sqlx::query!("SELECT role_name FROM role WHERE role_name = $1", name)
+            .fetch_one(pool)
+            .await
+            .ok();
+
+        if exists.is_some() {
+            return Err("Role already exists.".into());
+        }
+
+        let result = sqlx::query!(
+            "INSERT INTO role (
+                role_name,
+                purchasing,
+                product_edit_any,
+                seller_edit_any,
+                acct_edit_any)
+                VALUES
+                    ($1, false, false, false, false)
+                RETURNING role_key
+            ",
+            name
+        )
+        .fetch_one(pool)
+        .await?;
+
+        Ok(result.role_key)
+    }
+
+    /// Delete a role. You must have the `AcctEdit` permission to perform this action.
+    #[graphql(guard = "RoleGuard::AcctEdit")]
+    pub async fn delete_role(&self, ctx: &Context<'_>, role_key: i32) -> Result<bool> {
+        let pool = ctx.data::<PgPool>()?;
+
+        let exists = sqlx::query!("SELECT role_key FROM role WHERE role_key = $1", role_key)
+            .fetch_one(pool)
+            .await
+            .ok();
+
+        if exists.is_none() {
+            return Err("Role does not exist.".into());
+        }
+
+        sqlx::query!("DELETE FROM role WHERE role_key = $1", role_key)
+            .execute(pool)
+            .await?;
+
+        Ok(true)
+    }
+
+    /// Grant/deny a role a permission. You must have the `AcctEdit` permission to perform this
+    /// action.
+    #[graphql(guard = "RoleGuard::AcctEdit")]
+    pub async fn toggle_permission(
+        &self,
+        ctx: &Context<'_>,
+        role_key: i32,
+        permission: Permission,
+    ) -> Result<bool> {
+        let pool = ctx.data::<PgPool>()?;
+
+        let exists = sqlx::query!("SELECT role_key FROM role WHERE role_key = $1", role_key)
+            .fetch_one(pool)
+            .await
+            .ok();
+
+        if exists.is_none() {
+            return Err("Role does not exist.".into());
+        }
+
+        match permission {
+            Permission::Purchasing => {
+                sqlx::query!(
+                    "UPDATE role SET purchasing = NOT purchasing WHERE role_key = $1",
+                    role_key
+                )
+            }
+            Permission::ProductEdit => {
+                sqlx::query!(
+                    "UPDATE role SET product_edit_any = NOT product_edit_any WHERE role_key = $1",
+                    role_key
+                )
+            }
+            Permission::SellerEdit => {
+                sqlx::query!(
+                    "UPDATE role SET seller_edit_any = NOT seller_edit_any WHERE role_key = $1",
+                    role_key
+                )
+            }
+            Permission::AcctEdit => {
+                sqlx::query!(
+                    "UPDATE role SET acct_edit_any = NOT acct_edit_any WHERE role_key = $1",
+                    role_key
+                )
+            }
+        }
+        .execute(pool)
+        .await?;
+
+        Ok(true)
+    }
+
+    /// Connect a role to a seller, allowing them to update products owned by that seller. You must
+    /// have the `AcctEdit` permission to perform this action.
+    #[graphql(guard = "RoleGuard::AcctEdit")]
+    pub async fn connect_role_to_seller(
+        &self,
+        ctx: &Context<'_>,
+        role_key: i32,
+        seller_key: i32,
+    ) -> Result<bool> {
+        let pool = ctx.data::<PgPool>()?;
+
+        let exists = sqlx::query!("SELECT role_key FROM role WHERE role_key = $1", role_key)
+            .fetch_one(pool)
+            .await
+            .ok();
+
+        if exists.is_none() {
+            return Err("Role does not exist.".into());
+        }
+
+        let seller_exists = sqlx::query!(
+            "SELECT seller_key FROM seller WHERE seller_key = $1",
+            seller_key
+        )
+        .fetch_one(pool)
+        .await
+        .ok();
+
+        if seller_exists.is_none() {
+            return Err("Seller does not exist.".into());
+        }
+
+        sqlx::query!(
+            "INSERT INTO seller_admin_role (role_key, seller_key) VALUES ($1, $2)",
+            role_key,
+            seller_key
         )
         .execute(pool)
         .await?;
