@@ -5,6 +5,7 @@ use sqlx::PgPool;
 
 use crate::auth::User;
 use crate::guards::login::LoginGuard;
+use crate::guards::role::RoleGuard;
 use crate::util::self_or_acct_any;
 
 #[derive(SimpleObject)]
@@ -108,5 +109,24 @@ impl UserQuery {
             email: acct.acct_email,
             country: acct.acct_country,
         })
+    }
+
+    #[graphql(guard = "RoleGuard::AcctEdit")]
+    /// Retrieves a list of users. You must have the `AcctEdit` permission to perform this action.
+    async fn user_list(&self, ctx: &Context<'_>) -> Result<Vec<Account>> {
+        let pool = ctx.data::<PgPool>()?;
+
+        let accts = sqlx::query!("SELECT acct_key, acct_email, acct_country FROM acct;")
+            .fetch_all(pool)
+            .await?;
+
+        Ok(accts
+            .into_iter()
+            .map(|acct| Account {
+                key: acct.acct_key,
+                email: acct.acct_email,
+                country: acct.acct_country,
+            })
+            .collect())
     }
 }
