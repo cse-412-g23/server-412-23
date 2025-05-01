@@ -3,7 +3,7 @@ use server::ServerQuery;
 use user::UserQuery;
 
 mod server;
-mod user;
+pub mod user;
 
 #[derive(MergedObject, Default)]
 pub struct Query(ServerQuery, UserQuery);

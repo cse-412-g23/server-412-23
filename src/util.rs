@@ -1,4 +1,5 @@
 use async_graphql::{Context, Guard, Result};
+use sqlx::PgPool;
 
 use crate::{auth::User, guards::role::RoleGuard};
 
@@ -14,5 +15,28 @@ pub async fn self_or_acct_any(ctx: &Context<'_>, user_id: i32) -> Result<()> {
         Ok(())
     } else {
         RoleGuard::AcctEdit.check(ctx).await
+    }
+}
+
+pub async fn seller_or_edit_any(ctx: &Context<'_>, seller_id: i32) -> Result<()> {
+    let user = ctx.data::<User>()?;
+    let pool = ctx.data::<PgPool>()?;
+
+    let has_role = sqlx::query!(
+        "
+        SELECT sr.seller_key FROM acct_role ar
+            JOIN seller_admin_role sr ON sr.role_key = ar.role_key
+            WHERE ar.acct_key = $1;
+        ",
+        user.key
+    )
+    .fetch_one(pool)
+    .await
+    .ok();
+
+    if has_role.is_some() {
+        Ok(())
+    } else {
+        RoleGuard::SellerEdit.check(ctx).await
     }
 }
