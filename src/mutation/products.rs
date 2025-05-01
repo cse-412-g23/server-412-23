@@ -2,7 +2,7 @@ use async_graphql::{Context, Object, Result};
 use rust_decimal::{Decimal, prelude::FromPrimitive};
 use sqlx::{PgPool, postgres::types::PgMoney};
 
-use crate::util::seller_or_edit_any;
+use crate::{guards::role::RoleGuard, util::seller_or_edit_any};
 
 #[derive(Default)]
 pub struct ProductMutation;
@@ -20,7 +20,7 @@ impl ProductMutation {
         qty: i32,
         sold_by: i32,
     ) -> Result<i32> {
-        seller_or_edit_any(ctx, sold_by).await?;
+        seller_or_edit_any(ctx, sold_by, RoleGuard::SellerEdit).await?;
 
         let pool = ctx.data::<PgPool>()?;
 
@@ -57,7 +57,7 @@ impl ProductMutation {
     }
 
     /// (Un)lists a product. You must either be a member of a role associated with this product
-    /// or have the `SellerEdit` permission.
+    /// or have the `ProductEdit` permission.
     pub async fn list_product(&self, ctx: &Context<'_>, key: i32) -> Result<bool> {
         let pool = ctx.data::<PgPool>()?;
 
@@ -69,6 +69,7 @@ impl ProductMutation {
         seller_or_edit_any(
             ctx,
             product_seller.seller_key.expect("product has no seller"),
+            RoleGuard::ProductEdit,
         )
         .await?;
 
@@ -83,7 +84,7 @@ impl ProductMutation {
     }
 
     /// Adds quantity to a product. You must either be a member of a role associated with this
-    /// product or have the `SellerEdit` permission.
+    /// product or have the `ProductEdit` permission.
     pub async fn add_qty(&self, ctx: &Context<'_>, id: i32, qty: i32) -> Result<bool> {
         let pool = ctx.data::<PgPool>()?;
 
@@ -95,6 +96,7 @@ impl ProductMutation {
         seller_or_edit_any(
             ctx,
             product_seller.seller_key.expect("product has no seller"),
+            RoleGuard::ProductEdit,
         )
         .await?;
 

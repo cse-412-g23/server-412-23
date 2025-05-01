@@ -18,7 +18,7 @@ pub async fn self_or_acct_any(ctx: &Context<'_>, user_id: i32) -> Result<()> {
     }
 }
 
-pub async fn seller_or_edit_any(ctx: &Context<'_>, seller_id: i32) -> Result<()> {
+pub async fn seller_or_edit_any(ctx: &Context<'_>, seller_id: i32, perm: RoleGuard) -> Result<()> {
     let user = ctx.data::<User>()?;
     let pool = ctx.data::<PgPool>()?;
 
@@ -37,6 +37,6 @@ pub async fn seller_or_edit_any(ctx: &Context<'_>, seller_id: i32) -> Result<()>
     if has_role.and_then(|v| v.seller_key) == Some(seller_id) {
         Ok(())
     } else {
-        RoleGuard::SellerEdit.check(ctx).await
+        perm.check(ctx).await
     }
 }
