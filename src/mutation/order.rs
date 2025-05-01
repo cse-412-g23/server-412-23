@@ -10,6 +10,7 @@ pub struct OrderMutation;
 #[Object]
 impl OrderMutation {
     #[graphql(guard = "RoleGuard::Purchasing")]
+    /// Adds an item to the cart. You must have the `Purchasing` permission to perform this action.
     pub async fn add_to_cart(&self, ctx: &Context<'_>, product: i32) -> Result<i32> {
         let pool = ctx.data::<PgPool>().unwrap();
         let user = ctx.data::<User>().unwrap();
@@ -28,6 +29,8 @@ impl OrderMutation {
     }
 
     #[graphql(guard = "RoleGuard::Purchasing")]
+    /// Removes an item from the cart. You must have the `Purchasing` permission to perform this
+    /// action.
     pub async fn remove_from_cart(&self, ctx: &Context<'_>, cart_item: i32) -> Result<bool> {
         let pool = ctx.data::<PgPool>().unwrap();
         let user = ctx.data::<User>().unwrap();
@@ -44,6 +47,8 @@ impl OrderMutation {
     }
 
     #[graphql(guard = "RoleGuard::Purchasing")]
+    /// Places an order, removing all items from the cart, and reducing the quantity of purchased
+    /// items. You must have the `Purchasing` permission to perform this action.
     pub async fn place_order(&self, ctx: &Context<'_>, address: String) -> Result<i32> {
         let pool = ctx.data::<PgPool>().unwrap();
         let user = ctx.data::<User>().unwrap();

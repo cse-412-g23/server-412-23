@@ -9,6 +9,7 @@ pub struct SellerMutation;
 #[Object]
 impl SellerMutation {
     #[graphql(guard = "RoleGuard::SellerEdit")]
+    /// Creates a new seller. You must have the `SellerEdit` permission to perform this action.
     pub async fn create_seller(
         &self,
         ctx: &Context<'_>,

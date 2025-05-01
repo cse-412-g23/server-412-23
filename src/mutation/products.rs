@@ -9,6 +9,8 @@ pub struct ProductMutation;
 
 #[Object]
 impl ProductMutation {
+    /// Creates a new product with the given information. You must either be a member of a role
+    /// associated with this product or have the `SellerEdit` permission.
     pub async fn create_product(
         &self,
         ctx: &Context<'_>,
@@ -54,6 +56,8 @@ impl ProductMutation {
         Ok(result.product_key)
     }
 
+    /// (Un)lists a product. You must either be a member of a role associated with this product
+    /// or have the `SellerEdit` permission.
     pub async fn list_product(&self, ctx: &Context<'_>, key: i32) -> Result<bool> {
         let pool = ctx.data::<PgPool>()?;
 
@@ -78,6 +82,8 @@ impl ProductMutation {
         Ok(true)
     }
 
+    /// Adds quantity to a product. You must either be a member of a role associated with this
+    /// product or have the `SellerEdit` permission.
     pub async fn add_qty(&self, ctx: &Context<'_>, id: i32, qty: i32) -> Result<bool> {
         let pool = ctx.data::<PgPool>()?;
 

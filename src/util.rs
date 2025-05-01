@@ -34,7 +34,7 @@ pub async fn seller_or_edit_any(ctx: &Context<'_>, seller_id: i32) -> Result<()>
     .await
     .ok();
 
-    if has_role.is_some() {
+    if has_role.and_then(|v| v.seller_key) == Some(seller_id) {
         Ok(())
     } else {
         RoleGuard::SellerEdit.check(ctx).await
