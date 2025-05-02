@@ -1,5 +1,6 @@
 use std::env::var;
 
+use actix_cors::Cors;
 use actix_web::{
     App, HttpRequest, HttpResponse, HttpServer, guard,
     http::header::HeaderMap,
@@ -69,7 +70,10 @@ async fn main() -> Result<(), std::io::Error> {
             .data(pool.clone())
             .finish();
 
+        let cors = Cors::permissive();
+
         App::new()
+            .wrap(cors)
             .app_data(web::Data::new(schema.clone()))
             .service(resource("/").guard(guard::Post()).to(index))
             .service(resource("/").guard(guard::Get()).to(index_graphiql))
