@@ -18,7 +18,7 @@ impl ServerQuery {
     async fn info(&self) -> ServerInfo {
         ServerInfo {
             name: "server-412-23",
-            version: "0.1.0",
+            version: "0.2.0",
         }
     }
 }
