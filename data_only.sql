@@ -17,16 +17,6 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Data for Name: _sqlx_migrations; Type: TABLE DATA; Schema: public; Owner: snek
---
-
-COPY public._sqlx_migrations (version, description, installed_on, success, checksum, execution_time) FROM stdin;
-20250429020043	initial schema	2025-05-02 01:27:17.994631-07	t	\\x2344cafe66ff609c44040aeb9b13d719013e0c64b37a064063b53e14f6f11820b4d606472d8cbd49b7149dd785f78380	525292
-20250429053052	add roles	2025-05-02 01:27:17.995332-07	t	\\x154b5dde79e0fe0bdf7b9aab29fcda6ae79b3abb8c24c84e70580b995a01a28799d9a079b73b747d1e88107783ea2067	2131208
-\.
-
-
---
 -- Data for Name: acct; Type: TABLE DATA; Schema: public; Owner: snek
 --
 
